@@ -1,0 +1,209 @@
+<?php
+
+	   //conexión a la base de datos
+
+	   require_once("../config/conexion.php");
+
+	   class MatrizRegional extends Conectar{
+
+
+           
+       //método para seleccionar registros
+
+   	   public function get_matriz(){
+
+   	   	  $conectar=parent::conexion();
+   	   	  parent::set_names();
+
+   	   	  $sql="SELECT m.id_matriz,  if(m.subgrupo=null,'0','1') as subgrupo, if(m.nro_compromiso=null,0,1) as nro_compromiso, ct.tema as id_tema, m.id_entidad, p.pais as id_pais, m.compromiso, 
+            m.entidad_responsable, m.contacto, m.fecha_cumplimiento, m.observaciones, 
+            est.estado_cumplimiento,m.fecha_actualizacion, m.id_usuario 
+            FROM cmx_tema ct 
+            inner JOIN cmx_matriz m on ct.id_tema = m.id_tema 
+            inner join cmx_estado est on est.id_estado_cumplimiento = m.estado_cumplimiento
+            inner join pais p on m.id_pais = p.id_pais
+            order by m.nro_compromiso";
+
+   	   	  $sql=$conectar->prepare($sql);
+   	   	  $sql->execute();
+
+   	   	  return $resultado=$sql->fetchAll(PDO::FETCH_ASSOC);
+   	   }
+
+
+   	     //método para insertar registros
+
+        public function registrar_matriz($id_tema,$subgrupo,$nro_compromiso,$compromiso,$entidad_responsable,$contacto,$fecha_cumplimiento,$observaciones,$estado_cumplimiento,$id_usuario,$id_pais){
+
+           
+           $conectar= parent::conexion();
+           parent::set_names();
+
+           $sql="insert into cmx_matriz (id_tema,subgrupo, nro_compromiso, compromiso,entidad_responsable, contacto,fecha_cumplimiento,observaciones,estado_cumplimiento,id_usuario, id_pais)
+           values(?,?,?,?,?,?,?,?,?,?,?);";
+         
+            $sql=$conectar->prepare($sql);
+
+            $sql->bindValue(1, $_POST["id_tema"]);
+            $sql->bindValue(2, $_POST["subgrupo"]);
+            $sql->bindValue(3, $_POST["nro_compromiso"]);            
+            $sql->bindValue(4, $_POST["compromiso"]);
+            $sql->bindValue(5, $_POST["entidad_responsable"]);
+            $sql->bindValue(6, $_POST["contacto"]);
+            $sql->bindValue(7, $_POST["fecha_cumplimiento"]);
+            $sql->bindValue(8, $_POST["observaciones"]);
+            $sql->bindValue(9, $_POST["estado_cumplimiento"]);
+            $sql->bindValue(10, $_POST["id_usuario"]);
+            $sql->bindValue(11, $_POST["id_pais"]);
+            
+            $sql->execute();
+      
+         
+        }
+
+    //método para editar un registro
+       
+    public function editar_matriz($id_matriz,$id_tema,$subgrupo,$nro_compromiso,$compromiso,$entidad_responsable,$contacto,$fecha_cumplimiento,$observaciones,$estado_cumplimiento,$id_usuario,$id_pais){
+
+      $conectar=parent::conexion();
+      parent::set_names();
+
+       require_once("matriz.php");
+
+       $matriz = new Matriz();
+
+         //verifica si esta registrado por id matriz
+         //$matriz_exist=$matrix->get_cliente_por_cedula_ventas($_POST["cedula_cliente"]);
+
+     //verifica si la cedula tiene registro asociado a detalle_ventas
+    // $cliente_detalle_ventas=$cliente->get_cliente_por_cedula_detalle_ventas($_POST["cedula_cliente"]);
+
+      //si la cedula del cliente NO tiene registros asociados en las tablas ventas y detalle_ventas entonces se puede editar el cliente completo
+  
+
+           $sql="update cmx_matriz set 
+
+              id_tema=?,
+              subgrupo=?,
+              nro_compromiso=?,
+              compromiso=?,
+              entidad_responsable=?,
+              contacto=?,
+              fecha_cumplimiento=?,
+              observaciones=?,
+              estado_cumplimiento=?,
+              id_usuario=?,
+              id_pais=?
+              where 
+              id_matriz=?
+
+           ";
+           
+
+                 $sql=$conectar->prepare($sql);
+
+                 $sql->bindValue(1, $_POST["id_tema"]);
+                 $sql->bindValue(2, $_POST["subgrupo"]);
+                 $sql->bindValue(3, $_POST["nro_compromiso"]);                 
+                 $sql->bindValue(4, $_POST["compromiso"]);
+                 $sql->bindValue(5, $_POST["entidad_responsable"]);
+                 $sql->bindValue(6, $_POST["contacto"]);
+                 $sql->bindValue(7, $_POST["fecha_cumplimiento"]);
+                 $sql->bindValue(8, $_POST["observaciones"]);
+                 $sql->bindValue(9, $_POST["estado_cumplimiento"]);
+                 $sql->bindValue(10, $_POST["id_usuario"]);
+                 $sql->bindValue(11, $_POST["id_pais"]);
+                 $sql->bindValue(12, $_POST["id_matriz"]);
+                 $sql->execute();
+
+   }
+
+
+         //método para mostrar los datos de un registro a modificar
+        public function get_matriz_por_id($id_matriz){
+
+            
+            $conectar= parent::conexion();
+            parent::set_names();
+
+            $sql="select * from cmx_matriz where id_matriz=? order by nro_compromiso";
+
+            $sql=$conectar->prepare($sql);
+
+            $sql->bindValue(1, $id_matriz);
+            $sql->execute();
+            return $resultado=$sql->fetchAll();
+        }
+
+    
+
+        
+        public function eliminar_matriz($id_matriz){
+
+          $conectar=parent::conexion();
+
+          $sql="delete from cmx_matriz where id_matriz=?";
+
+          $sql=$conectar->prepare($sql);
+
+          $sql->bindValue(1, $id_matriz);
+          $sql->execute();
+
+          return $resultado=$sql->fetch(PDO::FETCH_ASSOC);
+  }
+
+
+          public function get_entidad_padre(){
+
+          $conectar=parent::conexion();
+          parent::set_names();
+
+          $sql=" SELECT * FROM cmx_entidad 
+              where id_padre = 0
+              and tipo_entidad like 'regional' ";
+
+          $sql=$conectar->prepare($sql);
+          $sql->execute();
+
+          return $resultado=$sql->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        public function buscar_hijo($id_entidad){
+           
+          $conectar= parent::conexion();
+          parent::set_names();
+
+          $sql="SELECT cm.id_multilateral, cm.descripcion, ce.nombre_entidad as id_entidad, cm.nombre_archivo, 
+                cm.fecha, cm.fecha_actualizacion
+                from cmx_multilateral cm
+                join cmx_entidad ce on ce.id_entidad = cm.id_entidad
+                where ce.id_padre = ?
+                 ";
+        
+           $sql=$conectar->prepare($sql);
+
+           $sql->bindValue(1, $id_entidad);
+                  
+           $sql->execute();
+           return $resultado=$sql->fetchAll();
+        
+       }
+       public function get_componente($id_entidad){
+           
+        $conectar= parent::conexion();
+      
+
+        $sql="select * from cmx_entidad where id_padre=?";
+      
+        
+         $sql=$conectar->prepare($sql);
+         $sql->bindValue(1, $id_entidad);                
+         $sql->execute();
+         return $resultado=$sql->fetchAll(PDO::FETCH_ASSOC);
+      
+     }
+
+  }
+
+
+   ?>

@@ -1,0 +1,22 @@
+
+
+table.matriz {
+  border-collapse: separate;
+  word-break: break-word;
+}
+table.matriz td, table.matriz tr, table.matriz th {
+  border: 1px solid #ddd;
+  padding: 8px;
+  vertical-align: top;
+
+}
+
+table.matriz tr:hover {background-color: #ddd;}
+
+table.matriz th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #04AA6D;
+  color: white;
+}
